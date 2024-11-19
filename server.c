@@ -54,10 +54,11 @@ void handle_SIGPIPE(){
     
 }
 
+int updated=0;
 void send_IP_list(){
     char* temp=(char*)malloc(SIZE_MSG*sizeof(char));
     while(1){
-        if(num_IP_Addrs>0){
+        if(num_IP_Addrs>0 && updated){
             sem_wait(&mutex);
             printf("Sending IP List to clients...\n");
             
@@ -89,6 +90,7 @@ void send_IP_list(){
                     send(connect_sockets[i],&IP_list_m,sizeof(Message),0);
                 }
             }
+            updated=0;
             sem_post(&mutex);
 
             sleep(4);
@@ -119,21 +121,40 @@ void client_session(void* _client_id){
             
             IP_Addrs[client_id]=IP;
             num_IP_Addrs++;
+            updated=1;
             sem_post(&sendIP);
 
             printf("Recieved IP from client %d: %s\n",client_id,IP_Addrs[client_id]);
             sem_post(&mutex);
         }
+        else if(th_m.status==REQUEST_CLIENT_CONNECTION){
+            printf("Requesting client connection...\n");
+            int req_client_id=atoi(th_m.msg);
+            if(connect_sockets[req_client_id]>=0){
+                char* temp=(char*)malloc(20*sizeof(char));
+                snprintf(temp,20,"%d",client_id);
+                th_m=*init_msg(REQUEST_CLIENT_CONNECTION,temp);
+                send(connect_sockets[req_client_id],&th_m,sizeof(Message),0);
+                free(temp);
+            }
+            else{
+                th_m=*init_msg(ERROR,"");
+                send(connect_sockets[client_id],&th_m,sizeof(Message),0);
+            }
+        }
+        else if(th_m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
+            printf("%s\n",th_m.msg);
+            //Fill out this segment
+
+            //send(connect_sockets[client_id],&th_m,sizeof(Message),0);
+        }
         else if(th_m.status==BREAK_CONNECTION){
             // free(IP_Addrs[client_id]);
             IP_Addrs[client_id]=NULL;
             num_IP_Addrs--;
+            updated=1;
             break;
         }
-        // th_m=*init_msg(GENERAL_MSG,"Hello there");
-        // if(send(connect_sockets[client_id],&th_m,sizeof(Message),0)<0){
-        //     break;
-        // }
     }
     printf("Client %d Disconnected...\n",client_id);
     close(connect_sockets[client_id]);
@@ -164,7 +185,6 @@ int main(){
 
     struct sockaddr_in addr;
     int addrlen=sizeof(addr);
-
 
     serverfd=socket(AF_INET,SOCK_STREAM,0);
     if(serverfd<0){

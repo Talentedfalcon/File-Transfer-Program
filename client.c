@@ -12,7 +12,6 @@
 #include <semaphore.h>
 
 #define PORT 12000
-#define TRANSFER_PORT 12001
 #define BUFFER_SIZE 1024
 
 sem_t mutex;
@@ -25,6 +24,8 @@ int option=-1;
 int num_IP_Addrs=0;
 char buffer[BUFFER_SIZE];
 Message m;
+
+int connect_req=0;
 
 void disconnect_from_server(){
     m=*init_msg(BREAK_CONNECTION,"");
@@ -108,16 +109,45 @@ void receiving_segment(){
             breakdown_msg(m.msg);
             sem_post(&mutex);
         }
+        else if(m.status==REQUEST_CLIENT_CONNECTION){
+            connect_req=1;
+            
+            int TRANSFER_PORT=12001;
+            struct sockaddr_in temp_addr;
+
+            int tempfd=socket(AF_INET,SOCK_STREAM,0);
+            temp_addr.sin_family=AF_INET;
+            temp_addr.sin_addr.s_addr=INADDR_ANY;
+            temp_addr.sin_port=htons(TRANSFER_PORT);
+
+            while(bind(tempfd,(struct sockaddr*)&temp_addr,sizeof(temp_addr))<0){
+                temp_addr.sin_port=htons(++TRANSFER_PORT);
+            }
+            // close(tempfd);
+            printf("%d\n",TRANSFER_PORT);
+            char* temp=(char*)malloc(20*sizeof(char));
+            snprintf(temp,20,"%s %d",m.msg,TRANSFER_PORT);
+            m=*init_msg(ACKNOWLEDGE_CLIENT_CONNECTION,temp);
+            send(serverfd,&m,sizeof(Message),0);
+        }
+        else if(m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
+            printf("%s\n",m.msg);
+        }
         else if(m.status==MAX_CAP_MSG){
             printf("%s\n",m.msg);
             break;
         }
+        else if(m.status==ERROR){
+            printf("Error occurred...\n");
+            break;
+        }
         sleep(1);
     }
+    raise(SIGINT);
 }
 
 void input_segment(){
-    while(option<=0){
+    while(option<=0 && !connect_req){
         sem_wait(&mutex);
         if(num_IP_Addrs>0){
             option=-1;
@@ -146,8 +176,17 @@ void input_segment(){
         sem_post(&mutex);
         sleep(1);
     }
-    printf("Option: %d\n",option);
-    disconnect_from_server();
+
+    if(option!=-1){
+        printf("Requesting connection with client %d...\n",client_ids[option-1]);
+        Message temp_m;
+        char* temp=(char*)malloc(20*sizeof(char));
+        sprintf(temp,"%d",client_ids[option-1]);
+        temp_m=*init_msg(REQUEST_CLIENT_CONNECTION,temp);
+        send(serverfd,&temp_m,sizeof(Message),0);
+
+        // disconnect_from_server();
+    }
 }
 
 int main(){
