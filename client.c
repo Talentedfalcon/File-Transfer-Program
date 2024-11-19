@@ -123,15 +123,21 @@ void receiving_segment(){
             while(bind(tempfd,(struct sockaddr*)&temp_addr,sizeof(temp_addr))<0){
                 temp_addr.sin_port=htons(++TRANSFER_PORT);
             }
-            // close(tempfd);
-            printf("%d\n",TRANSFER_PORT);
+            printf("Sending connection acknowledgement along with TRANSFER_PORT...\n");
             char* temp=(char*)malloc(20*sizeof(char));
-            snprintf(temp,20,"%s %d",m.msg,TRANSFER_PORT);
+            snprintf(temp,20,"%d",TRANSFER_PORT);
             m=*init_msg(ACKNOWLEDGE_CLIENT_CONNECTION,temp);
             send(serverfd,&m,sizeof(Message),0);
+            close(tempfd);
+            disconnect_from_server();
+            execl("./peer_server",temp);
         }
         else if(m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
-            printf("%s\n",m.msg);
+            char* transfer_port=(char*)malloc((strlen(m.msg)+1)*sizeof(char));
+            strcpy(transfer_port,m.msg);
+            printf("Received acknowledgement from client %d \n\tTRANSFER_PORT=%s\n",client_ids[option-1],transfer_port);
+            disconnect_from_server();
+            execl("./peer_client",IP_Addrs[option-1],transfer_port);
         }
         else if(m.status==MAX_CAP_MSG){
             printf("%s\n",m.msg);
@@ -177,15 +183,13 @@ void input_segment(){
         sleep(1);
     }
 
-    if(option!=-1){
+    if(option!=-1 && option<=num_IP_Addrs){
         printf("Requesting connection with client %d...\n",client_ids[option-1]);
         Message temp_m;
         char* temp=(char*)malloc(20*sizeof(char));
         sprintf(temp,"%d",client_ids[option-1]);
         temp_m=*init_msg(REQUEST_CLIENT_CONNECTION,temp);
         send(serverfd,&temp_m,sizeof(Message),0);
-
-        // disconnect_from_server();
     }
 }
 

@@ -136,17 +136,16 @@ void client_session(void* _client_id){
                 th_m=*init_msg(REQUEST_CLIENT_CONNECTION,temp);
                 send(connect_sockets[req_client_id],&th_m,sizeof(Message),0);
                 free(temp);
+                recv(connect_sockets[req_client_id],&th_m,sizeof(Message),0);
+                if(th_m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
+                    printf("Received acknowledgement... %s\n",th_m.msg);
+                    send(connect_sockets[client_id],&th_m,sizeof(Message),0);
+                }
             }
             else{
                 th_m=*init_msg(ERROR,"");
                 send(connect_sockets[client_id],&th_m,sizeof(Message),0);
             }
-        }
-        else if(th_m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
-            printf("%s\n",th_m.msg);
-            //Fill out this segment
-
-            //send(connect_sockets[client_id],&th_m,sizeof(Message),0);
         }
         else if(th_m.status==BREAK_CONNECTION){
             // free(IP_Addrs[client_id]);
