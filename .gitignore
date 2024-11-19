@@ -4,3 +4,5 @@ s
 c
 peer_client
 peer_server
+*.txt
+.vscode

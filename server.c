@@ -8,6 +8,7 @@
 #include <string.h>
 #include "message.h"
 #include <semaphore.h>
+#include <sys/time.h>
 
 #define PORT 12000
 #define BUFFER_SIZE 1024
@@ -107,52 +108,61 @@ void client_session(void* _client_id){
     printf("In session %d\n",client_id);
     while(connect_sockets[client_id]>=0){
         sleep(1);
-        int recv_status=recv(connect_sockets[client_id],&th_m,sizeof(Message),0);
-        if(recv_status<0){
-            perror("Client not responding");
-            break;
-        }
-        sleep(1);
-        if(th_m.status==APPEND_IP){
-            sem_wait(&mutex);
-            // printf("Client %d: %s\n",client_id,th_m.msg);
-            char* IP=(char*)malloc(100*sizeof(char));
-            strcpy(IP,th_m.msg);
-            
-            IP_Addrs[client_id]=IP;
-            num_IP_Addrs++;
-            updated=1;
-            sem_post(&sendIP);
+        struct timeval timeout = {3, 0};
+        fd_set fds;
+        FD_ZERO(&fds);
+        FD_SET(connect_sockets[client_id], &fds);
+        int client_socket=connect_sockets[client_id];
+        int ret = select(client_socket+1, &fds, NULL, NULL, &timeout);
+        if(ret>=0){
+            int recv_status=recv(connect_sockets[client_id],&th_m,sizeof(Message),0);
+            if(recv_status<0){
+                perror("Client not responding");
+                break;
+            }
+            sleep(1);
+            if(th_m.status==APPEND_IP){
+                sem_wait(&mutex);
+                // printf("Client %d: %s\n",client_id,th_m.msg);
+                char* IP=(char*)malloc(100*sizeof(char));
+                strcpy(IP,th_m.msg);
+                
+                IP_Addrs[client_id]=IP;
+                num_IP_Addrs++;
+                updated=1;
+                sem_post(&sendIP);
 
-            printf("Recieved IP from client %d: %s\n",client_id,IP_Addrs[client_id]);
-            sem_post(&mutex);
-        }
-        else if(th_m.status==REQUEST_CLIENT_CONNECTION){
-            printf("Requesting client connection...\n");
-            int req_client_id=atoi(th_m.msg);
-            if(connect_sockets[req_client_id]>=0){
-                char* temp=(char*)malloc(20*sizeof(char));
-                snprintf(temp,20,"%d",client_id);
-                th_m=*init_msg(REQUEST_CLIENT_CONNECTION,temp);
-                send(connect_sockets[req_client_id],&th_m,sizeof(Message),0);
-                free(temp);
-                recv(connect_sockets[req_client_id],&th_m,sizeof(Message),0);
-                if(th_m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
-                    printf("Received acknowledgement... %s\n",th_m.msg);
+                printf("Recieved IP from client %d: %s\n",client_id,IP_Addrs[client_id]);
+                sem_post(&mutex);
+            }
+            else if(th_m.status==REQUEST_CLIENT_CONNECTION){
+                printf("Requesting client connection...\n");
+                int req_client_id=atoi(th_m.msg);
+                int req_socket=connect_sockets[req_client_id];
+                if(connect_sockets[req_client_id]>=0){
+                    connect_sockets[req_client_id]=-1;
+                    char* temp=(char*)malloc(20*sizeof(char));
+                    snprintf(temp,20,"%d",client_id);
+                    th_m=*init_msg(REQUEST_CLIENT_CONNECTION,temp);
+                    send(req_socket,&th_m,sizeof(Message),0);
+                    recv(req_socket,&th_m,sizeof(Message),0);
+                    if(th_m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
+                        printf("Received acknowledgement... %s\n",th_m.msg);
+                        send(connect_sockets[client_id],&th_m,sizeof(Message),0);
+                    }
+                }
+                else{
+                    th_m=*init_msg(ERROR,"");
                     send(connect_sockets[client_id],&th_m,sizeof(Message),0);
                 }
             }
-            else{
-                th_m=*init_msg(ERROR,"");
-                send(connect_sockets[client_id],&th_m,sizeof(Message),0);
+            else if(th_m.status==BREAK_CONNECTION){
+                // free(IP_Addrs[client_id]);
+                IP_Addrs[client_id]=NULL;
+                num_IP_Addrs--;
+                updated=1;
+                break;
             }
-        }
-        else if(th_m.status==BREAK_CONNECTION){
-            // free(IP_Addrs[client_id]);
-            IP_Addrs[client_id]=NULL;
-            num_IP_Addrs--;
-            updated=1;
-            break;
         }
     }
     printf("Client %d Disconnected...\n",client_id);

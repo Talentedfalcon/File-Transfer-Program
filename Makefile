@@ -14,3 +14,5 @@ all:
 clean:
 	rm s
 	rm c
+	rm peer_server
+	rm peer_client
