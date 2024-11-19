@@ -1,18 +1,23 @@
 CC:=gcc
 CFLAGS:=-o
-server:=server.c
+server:=main_server.c
 client:=client.c
 peer_server:= peer_server.c
 peer_client:= peer_client.c
 
-all: 
-	$(CC) $(server) $(CFLAGS) s
-	$(CC) $(client) $(CFLAGS) c
-	$(CC) $(peer_server) $(CFLAGS) peer_server
-	$(CC) $(peer_client) $(CFLAGS) peer_client
+code_folder:=./codes/
+exec_folder:=./exec/
+
+spacer:=_
+
+all:
+	mkdir -p $(exec_folder)
+	$(CC) $(code_folder)$(server) $(CFLAGS) $(exec_folder)$(spacer)s
+	$(CC) $(code_folder)$(client) $(CFLAGS) $(exec_folder)$(spacer)c
+	$(CC) $(code_folder)$(peer_server) $(CFLAGS) $(exec_folder)$(spacer)peer_server
+	$(CC) $(code_folder)$(peer_client) $(CFLAGS) $(exec_folder)$(spacer)peer_client
+
+RMFLAGS:=-rf
 
 clean:
-	rm s
-	rm c
-	rm peer_server
-	rm peer_client
+	rm $(RMFLAGS) $(exec_folder)

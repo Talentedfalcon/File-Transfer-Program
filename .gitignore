@@ -1,8 +1,5 @@
-test.txt
-notes.txt
-s
-c
-peer_client
-peer_server
+_*
 *.txt
 .vscode
+testing
+exec
