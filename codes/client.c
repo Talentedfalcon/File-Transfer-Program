@@ -133,6 +133,7 @@ void receiving_segment(){
             disconnect_from_server();
             sleep(1);
             execl("./_peer_server","./_peer_server",temp);
+            exit(EXIT_SUCCESS);
         }
         else if(m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
             char* transfer_port=(char*)malloc((strlen(m.msg)+1)*sizeof(char));
@@ -141,6 +142,7 @@ void receiving_segment(){
             disconnect_from_server();
             sleep(1);
             execl("./_peer_client","./_peer_client",IP_Addrs[option-1],transfer_port);
+            exit(EXIT_SUCCESS);
         }
         else if(m.status==MAX_CAP_MSG){
             printf("%s\n",m.msg);
