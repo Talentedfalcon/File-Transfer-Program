@@ -30,20 +30,21 @@ test:
 	$(CC) $(code_folder)$(client) $(CFLAGS) $(test_folder)$(client_folder)1/$(spacer)c
 	$(CC) $(code_folder)$(peer_server) $(CFLAGS) $(test_folder)$(client_folder)1/$(spacer)peer_server
 	$(CC) $(code_folder)$(peer_client) $(CFLAGS) $(test_folder)$(client_folder)1/$(spacer)peer_client
-	touch $(test_folder)$(client_folder)1/file.txt
 
 	mkdir -p $(test_folder)$(client_folder)2/
 	$(CC) $(code_folder)$(client) $(CFLAGS) $(test_folder)$(client_folder)2/$(spacer)c
 	$(CC) $(code_folder)$(peer_server) $(CFLAGS) $(test_folder)$(client_folder)2/$(spacer)peer_server
 	$(CC) $(code_folder)$(peer_client) $(CFLAGS) $(test_folder)$(client_folder)2/$(spacer)peer_client
-	touch $(test_folder)$(client_folder)2/file.txt
 
 	mkdir -p $(test_folder)$(client_folder)3/
 	$(CC) $(code_folder)$(client) $(CFLAGS) $(test_folder)$(client_folder)3/$(spacer)c
 	$(CC) $(code_folder)$(peer_server) $(CFLAGS) $(test_folder)$(client_folder)3/$(spacer)peer_server
 	$(CC) $(code_folder)$(peer_client) $(CFLAGS) $(test_folder)$(client_folder)3/$(spacer)peer_client
-	touch $(test_folder)$(client_folder)3/file.txt
 
+	mkdir -p $(test_folder)$(client_folder)4/
+	$(CC) $(code_folder)$(client) $(CFLAGS) $(test_folder)$(client_folder)4/$(spacer)c
+	$(CC) $(code_folder)$(peer_server) $(CFLAGS) $(test_folder)$(client_folder)4/$(spacer)peer_server
+	$(CC) $(code_folder)$(peer_client) $(CFLAGS) $(test_folder)$(client_folder)4/$(spacer)peer_client
 clean:
 	rm $(RMFLAGS) $(exec_folder)
 	rm $(RMFLAGS) $(test_folder)

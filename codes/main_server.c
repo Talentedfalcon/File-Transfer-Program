@@ -12,7 +12,7 @@
 
 #define PORT 12000
 #define BUFFER_SIZE 1024
-#define MAX_CONNECTIONS 3
+#define MAX_CONNECTIONS 4
 
 sem_t mutex;
 sem_t sendIP;
