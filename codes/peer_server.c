@@ -22,7 +22,7 @@ void receive_file(char* filepath){
     Message m;
     size_t recv_status;
 
-    FILE* fptr=fopen("recv.txt","wb");
+    FILE* fptr=fopen(filepath,"wb");
 
     while(1){
         memset(buffer,0,BUF_SIZE);
