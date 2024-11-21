@@ -132,8 +132,9 @@ void receiving_segment(){
             close(tempfd);
             disconnect_from_server();
             sleep(1);
-            execl("./_peer_server","./_peer_server",temp);
-            exit(EXIT_SUCCESS);
+            execlp("./_peer_server","./_peer_server",temp);
+            printf("Error executing _peer_server");
+            exit(EXIT_FAILURE);
         }
         else if(m.status==ACKNOWLEDGE_CLIENT_CONNECTION){
             char* transfer_port=(char*)malloc((strlen(m.msg)+1)*sizeof(char));
@@ -141,8 +142,9 @@ void receiving_segment(){
             printf("Received acknowledgement from client %d \n\tTRANSFER_PORT=%s\n",client_ids[option-1],transfer_port);
             disconnect_from_server();
             sleep(1);
-            execl("./_peer_client","./_peer_client",IP_Addrs[option-1],transfer_port);
-            exit(EXIT_SUCCESS);
+            execlp("./_peer_client","./_peer_client",IP_Addrs[option-1],transfer_port);
+            printf("Error executing _peer_client");
+            exit(EXIT_FAILURE);
         }
         else if(m.status==MAX_CAP_MSG){
             printf("%s\n",m.msg);
