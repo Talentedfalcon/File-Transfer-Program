@@ -9,7 +9,13 @@ A simple Peer-to-Peer file transfer application for Linux that uses a server for
 - Make sure that the ```_peer_client``` and ```_peer_server``` in the same directory as ```_c```
 
 <hr style="height:2px;"></hr>
-<h4 style="text-align:center;">OR</h4>
+<div style="
+    text-align:center; 
+    font-weight:bold; 
+    font-size:18px;
+">
+    OR
+</div>
 <hr style="height:2px;"></hr>
 
 - Alternatively run ```make test``` to create a ```./testing``` folder where 4 client directories will be initialised along with a server
