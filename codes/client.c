@@ -198,7 +198,13 @@ void input_segment(){
     }
 }
 
-int main(){
+int main(int argc,char** argv){
+    if(argc!=3){
+        printf("Invalid Arguements\n");
+        printf("Usage:\n\t %s <ip-address> <port-number>",argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
     signal(SIGINT,handle_SIGINT);
     signal(SIGPIPE,handle_SIGPIPE);
 
@@ -214,9 +220,9 @@ int main(){
     }
 
     server_addr.sin_family=AF_INET;
-    server_addr.sin_port=htons(PORT);
+    server_addr.sin_port=htons(atoi(argv[2]));
 
-    if(inet_pton(AF_INET,"127.0.0.1",&server_addr.sin_addr)<=0){
+    if(inet_pton(AF_INET,argv[1],&server_addr.sin_addr)<=0){
         perror("inet_pton failed");
         close(serverfd);
         exit(EXIT_FAILURE);
